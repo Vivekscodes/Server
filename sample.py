@@ -5,6 +5,9 @@ app = Flask(__name__)
 
 # Load a distilled model for question-answering
 question_answerer = pipeline("question-answering", model="distilbert-base-uncased-distilled-squad")
+@app.route('/')
+def home():
+    return "Hello, World!"
 
 @app.route('/answer', methods=['POST'])
 def get_fast_answer():
