@@ -1,6 +1,7 @@
 ```python
 from flask import Flask, request, jsonify
 from transformers import pipeline
+from typing import Dict, Any
 
 app = Flask(__name__)
 
@@ -9,11 +10,11 @@ app = Flask(__name__)
 qa_pipeline = pipeline("question-answering", model="distilbert-base-uncased-distilled-squad")
 
 @app.route('/')
-def home():
+def home() -> str:
     return "Hello, World!"
 
 @app.route('/answer', methods=['POST'])
-def get_answer():
+def get_answer() -> jsonify:
     """
     API endpoint to answer questions based on a provided context.
     Expects a JSON payload containing 'question' and 'context' keys.
@@ -21,21 +22,30 @@ def get_answer():
     """
     try:
         # Get the JSON data from the request
-        request_data = request.get_json()
+        request_data: Dict[str, str] = request.get_json()
+
+        # Check if request_data is None
+        if request_data is None:
+            return jsonify({'error': 'Request body must be JSON'}), 400
 
         # Extract the question and context from the JSON data
-        question = request_data.get('question')
-        context = request_data.get('context')
+        question: str = request_data.get('question')
+        context: str = request_data.get('context')
+
+        # Check if question or context is missing
+        if not question or not context:
+            return jsonify({'error': 'Missing question or context'}), 400
 
         # Generate the answer using the question-answering pipeline
-        result = qa_pipeline(question=question, context=context)
-        answer = result['answer']
+        result: Dict[str, Any] = qa_pipeline(question=question, context=context)
+        answer: str = result['answer']
 
         # Return the answer as a JSON response
         return jsonify({'answer': answer})
 
     except Exception as e:
         # Handle potential errors during processing
+        print(f"Error: {e}")  # Log the error for debugging
         return jsonify({'error': str(e)}), 500
 
 
