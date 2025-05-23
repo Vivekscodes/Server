@@ -9,9 +9,15 @@ app = Flask(__name__)
 # DistilBERT is faster and lighter than BERT, making it suitable for quick responses.
 qa_pipeline = pipeline("question-answering", model="distilbert-base-uncased-distilled-squad")
 
+
 @app.route('/')
 def home() -> str:
+    """
+    Home endpoint.
+    Returns a simple greeting.
+    """
     return "Hello, World!"
+
 
 @app.route('/answer', methods=['POST'])
 def get_answer() -> jsonify:
@@ -33,8 +39,10 @@ def get_answer() -> jsonify:
         context: str = request_data.get('context')
 
         # Check if question or context is missing
-        if not question or not context:
-            return jsonify({'error': 'Missing question or context'}), 400
+        if not question:
+            return jsonify({'error': 'Missing question'}), 400
+        if not context:
+            return jsonify({'error': 'Missing context'}), 400
 
         # Generate the answer using the question-answering pipeline
         result: Dict[str, Any] = qa_pipeline(question=question, context=context)
