@@ -24,15 +24,15 @@ def get_answer() -> jsonify:
     """
     API endpoint to answer questions based on a provided context.
     Expects a JSON payload containing 'question' and 'context' keys.
-    Returns a JSON response with the 'answer'.
+    Returns a JSON response with the 'answer', confidence score and the question asked.
     """
     try:
         # Get the JSON data from the request
         request_data: Dict[str, str] = request.get_json()
 
-        # Check if request_data is None
-        if request_data is None:
-            return jsonify({'error': 'Request body must be JSON'}), 400
+        # Check if request_data is None or not a dictionary
+        if not isinstance(request_data, dict):
+            return jsonify({'error': 'Invalid JSON format'}), 400
 
         # Extract the question and context from the JSON data
         question: str = request_data.get('question')
@@ -47,9 +47,16 @@ def get_answer() -> jsonify:
         # Generate the answer using the question-answering pipeline
         result: Dict[str, Any] = qa_pipeline(question=question, context=context)
         answer: str = result['answer']
+        confidence_score: float = result['score']
 
-        # Return the answer as a JSON response
-        return jsonify({'answer': answer})
+
+        # Return the answer as a JSON response, including the question for clarity
+        response_data: Dict[str, Any] = {
+            'question': question,
+            'answer': answer,
+            'confidence': confidence_score
+        }
+        return jsonify(response_data)
 
     except Exception as e:
         # Handle potential errors during processing
